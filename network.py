@@ -1,7 +1,7 @@
-from filework import METAMASK, PASSWORD, gen_phrase
+from filework import METAMASK, PASSWORD, gen_phrase, DRIVER
 from selenium import webdriver
 from selenium.common.exceptions import ElementClickInterceptedException, NoSuchElementException, \
-	SessionNotCreatedException
+	SessionNotCreatedException, WebDriverException
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 from time import sleep, localtime, strftime
@@ -11,13 +11,17 @@ def searcher() -> dict:
 	while True:
 		try:
 			options = webdriver.ChromeOptions()
+			options.add_argument('--disable-logging')
+			options.add_argument('--disable-search-engine-choice-screen')
+			options.add_experimental_option('excludeSwitches', ['enable-logging'])
 			options.add_argument("--headless=new")
 			options.add_extension(METAMASK)
-			driver = webdriver.Chrome(options=options)
-			driver.implicitly_wait(10)
+			service = webdriver.ChromeService(executable_path=DRIVER)
+			driver = webdriver.Chrome(options=options, service=service)
+			driver.implicitly_wait(1)
 			break
 		except SessionNotCreatedException:
-			print(f"{strftime("%H:%M:%S %d/%m/%y", localtime())} LOG: SessionNotCreatedException [network -> 20]")
+			print(f"{strftime("%H:%M:%S %d/%m/%y", localtime())} LOG: SessionNotCreatedException [network -> 24]")
 			sleep(1)
 	# driver.get("chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/home.html")
 	while len(driver.window_handles) < 2:
@@ -30,17 +34,22 @@ def searcher() -> dict:
 			driver.find_element(By.ID, "onboarding__terms-checkbox").click()
 			break
 		except NoSuchElementException:
-			print(f"{strftime("%H:%M:%S %d/%m/%y", localtime())} LOG: NoSuchElementException [network -> 33]")
+			print(f"{strftime("%H:%M:%S %d/%m/%y", localtime())} LOG: NoSuchElementException [network -> 37]")
+			driver.get_screenshot_as_file("NET->33.png")
 			sleep(1)
 	# BUTTON: Import exists wallet
 	driver.find_elements(By.CLASS_NAME, "button")[1].click()
 	# BUTTON: Agreement
 	driver.find_elements(By.CLASS_NAME, "button")[1].click()
+	srp = gen_phrase()
 	while True:
-		srp = gen_phrase()
+		cnt = 0
 		# FIELD: Put seed phrase
-		while not len(driver.find_elements(By.ID, f"import-srp__srp-word-0")):
+		while cnt < 10 and not len(driver.find_elements(By.ID, f"import-srp__srp-word-0")):
+			cnt += 1
 			sleep(1)
+		if cnt == 10:
+			return {"error": "Metamask Error", "type": "Filling fields error"}
 		for i in range(12):
 			driver.find_element(By.ID, f"import-srp__srp-word-{i}").send_keys(srp[i])
 		try:
@@ -59,17 +68,22 @@ def searcher() -> dict:
 			driver.find_element(By.XPATH, f"/html/body/{"div/" * 7}button").click()
 			# BUTTON: Complete
 			driver.find_element(By.XPATH, f"/html/body/{"div/" * 7}button").click()
+			cnt = 0
 			while True:
+				if cnt == 10:
+					return {"type": "Metamask Time Out", "error": "ETH Net connect error"}
 				try:
 					# BUTTON: Settings
 					driver.find_elements(By.XPATH, f"/html/body/{"div/" * 7}button")[1].click()
 					break
 				except IndexError:
-					print(f"{strftime("%H:%M:%S %d/%m/%y", localtime())} LOG: IndexError [network -> 66]")
+					print(f"{strftime("%H:%M:%S %d/%m/%y", localtime())} LOG: IndexError [network -> 80]")
 					sleep(1)
+					cnt += 1
 				except ElementClickInterceptedException:
-					print(f"{strftime("%H:%M:%S %d/%m/%y", localtime())} LOG: ElementClickInterceptedException [network -> 69]")
+					print(f"{strftime("%H:%M:%S %d/%m/%y", localtime())} LOG: ElementClickInterceptedException [network -> 84]")
 					sleep(1)
+					cnt += 1
 			# BUTTON: Address
 			driver.find_elements(By.XPATH, f"/html/body/{"div/" * 6}button")[1].click()
 			# TEXT: Addr
@@ -79,24 +93,41 @@ def searcher() -> dict:
 			for i in range(12):
 				driver.find_element(By.ID, f"import-srp__srp-word-{i}").send_keys(Keys.CONTROL, "a")
 				driver.find_element(By.ID, f"import-srp__srp-word-{i}").send_keys(Keys.DELETE)
+			srp = gen_phrase()
+		except WebDriverException:
+			pass
 
 
 def checker(wallet) -> dict:
 	options = webdriver.ChromeOptions()
+	options.add_argument('--disable-logging')
+	options.add_argument('--disable-search-engine-choice-screen')
+	options.add_experimental_option('excludeSwitches', ['enable-logging'])
 	options.add_argument("--headless=new")
-	driver = webdriver.Chrome(options=options)
-	driver.implicitly_wait(3)
+	service = webdriver.ChromeService(executable_path=DRIVER)
+	while True:
+		try:
+			driver = webdriver.Chrome(options=options, service=service)
+			break
+		except SessionNotCreatedException:
+			sleep(1)
+	driver.implicitly_wait(1)
 	# try:
 	driver.get(f"https://debank.com/profile/{wallet["addr"]}")
 	# except Exception as e:
 	# 	return {"type": "None", "error": e}
-	while True:
+	cnt = 0
+	while cnt < 10:
 		try:
-			wallet["bal"] = driver.find_element(By.CSS_SELECTOR, "div.HeaderInfo_totalAssetInner__HyrdC").text.split("\n")[0]
-			break
+			if "Data updated" in driver.find_element(By.CSS_SELECTOR, "span.UpdateButton_refresh__vkj2W").text:
+				wallet["bal"] = driver.find_element(By.CSS_SELECTOR, "div.HeaderInfo_totalAssetInner__HyrdC").text.split("\n")[0]
+				break
 		except NoSuchElementException:
-			print(f"{strftime("%H:%M:%S %d/%m/%y", localtime())} LOG: NoSuchElementException [network -> 96]")
+			cnt += 1
+			print(f"{strftime("%H:%M:%S %d/%m/%y", localtime())} LOG: NoSuchElementException [network -> 126]")
 			sleep(1)
+	if cnt == 20:
+		return {"type": "DeBank Time out", "error": "DeBank page isn't loading"}
 	try:
 		wallet["age"] = driver.find_element(By.CSS_SELECTOR, "div.is-age").text.split("\n")[0]
 	except NoSuchElementException:

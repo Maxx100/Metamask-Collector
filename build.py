@@ -1,6 +1,6 @@
 import os
 
-NAME = "mmc"
+NAME = "MetamaskCollector"
 
 
 def rdir(path):
@@ -17,6 +17,7 @@ if os.path.exists("dist"):
 os.system(
 	"pyinstaller "
 	"--onefile "
+	"--icon=data/metamask.ico "
 	f"-n {NAME} "
 	"--add-data \"data:data\" "
 	"main.py"
