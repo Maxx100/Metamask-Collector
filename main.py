@@ -20,10 +20,10 @@ def beauty_time(secs) -> str:
 	if days == 0 and hours == 0 and minutes == 0:
 		return f"{seconds}s"
 	if days == 0 and hours == 0:
-		return f"{seconds}s {minutes}m"
+		return f"{minutes}m {seconds}s"
 	if days == 0:
-		return f"{seconds}s {minutes}m {hours}h"
-	return f"{seconds}s {minutes}m {hours}h {days}d"
+		return f"{hours}h {minutes}m {seconds}s"
+	return f"{days}d {hours}h {minutes}m {seconds}s"
 
 
 def pprint(text: str, color="WHITE"):
@@ -59,7 +59,7 @@ if __name__ == "__main__":
 			pprint(
 				f"STATISTIC: \t"
 				f"FOUND: \t{stats["found"]}\n\t\t\t"
-				f"TIME: \t{beauty_time(time() - stats["time_start"]).replace(" ", "\n\t\t\t\t\t")}"
+				f"TIME: \t{beauty_time(time() - stats["time_start"])}"
 				f"\n\t\t\tWPM: \t{round(int(time() - stats["time_start"]) / 60 / stats["found"], 3)}",
 				"YELLOW"
 			)
