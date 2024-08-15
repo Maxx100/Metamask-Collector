@@ -138,6 +138,8 @@ class Net:
 						By.CSS_SELECTOR,
 						"div.HeaderInfo_totalAssetInner__HyrdC").text.split("\n")[0]
 					break
+				else:
+					raise NoSuchElementException
 			except NoSuchElementException:
 				cnt += 1
 				print(f"{strftime("%H:%M:%S %d/%m/%y", localtime())} LOG: NoSuchElementException [network -> 143]")
