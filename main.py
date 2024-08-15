@@ -5,7 +5,7 @@ from network import Net
 
 
 net = Net()
-stats = {"found": 0, "time_start": time()}
+stats = {"found": 0, "time_start": time(), "success": 0}
 
 
 def beauty_time(secs) -> str:
@@ -51,6 +51,7 @@ if __name__ == "__main__":
 				pprint(f"DeBank error: {wallet2["type"]}\n{wallet2["error"]}", "RED")
 				wallet2 = net.checker(wallet)
 			if wallet2["age"] != "None" or wallet2["bal"] != "$0":
+				stats["success"] += 1
 				pprint(f"{wallet2["addr"]}\n{wallet2["age"]}\n{wallet2["bal"]}\n{wallet2["srp"]}\n", "GREEN")
 			else:
 				pprint(wallet2["addr"], "YELLOW")
@@ -58,8 +59,8 @@ if __name__ == "__main__":
 			stats["found"] += 1
 			pprint(
 				f"STATISTIC: \t"
-				f"FOUND: \t{stats["found"]}\n\t\t\t"
+				f"FOUND: \t{stats["found"]}\t\tSUCCESS: {stats["success"]}\n\t\t\t"
 				f"TIME: \t{beauty_time(time() - stats["time_start"])}"
-				f"\n\t\t\tWPM: \t{round(int(time() - stats["time_start"]) / 60 / stats["found"], 3)}",
+				f"\n\t\t\tWPM: \t{round(stats["found"] / (int(time() - stats["time_start"]) / 60), 3)}",
 				"YELLOW"
 			)

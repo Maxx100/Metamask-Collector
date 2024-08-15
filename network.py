@@ -26,7 +26,9 @@ class Net:
 	
 	@staticmethod
 	def searcher() -> dict:
-		while True:
+		driver = None
+		cnt = 0
+		while cnt < 10:
 			try:
 				options = webdriver.ChromeOptions()
 				options.add_argument('--disable-logging')
@@ -39,21 +41,30 @@ class Net:
 				driver.implicitly_wait(1)
 				break
 			except SessionNotCreatedException:
-				print(f"{strftime("%H:%M:%S %d/%m/%y", localtime())} LOG: SessionNotCreatedException [network -> 24]")
+				print(f"{strftime("%H:%M:%S %d/%m/%y", localtime())} LOG: SessionNotCreatedException [network -> 44]")
+				cnt += 1
 				sleep(1)
+		if cnt == 10:
+			driver.quit()
+			return {"error": "Metamask Error", "type": "Driver init error"}
 		# driver.get("chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/home.html")
 		while len(driver.window_handles) < 2:
 			sleep(1)
 		driver.close()
 		driver.switch_to.window(window_name=driver.window_handles[0])
-		while True:
+		cnt = 0
+		while cnt < 10:
 			try:
 				# CHECKBOX: Terms of use
 				driver.find_element(By.ID, "onboarding__terms-checkbox").click()
 				break
 			except NoSuchElementException:
-				print(f"{strftime("%H:%M:%S %d/%m/%y", localtime())} LOG: NoSuchElementException [network -> 37]")
+				print(f"{strftime("%H:%M:%S %d/%m/%y", localtime())} LOG: NoSuchElementException [network -> 62]")
+				cnt += 1
 				sleep(1)
+		if cnt == 10:
+			driver.quit()
+			return {"error": "Metamask Error", "type": "Metamask extension error"}
 		# BUTTON: Import exists wallet
 		driver.find_elements(By.CLASS_NAME, "button")[1].click()
 		# BUTTON: Agreement
@@ -96,11 +107,11 @@ class Net:
 						driver.find_elements(By.XPATH, f"/html/body/{"div/" * 7}button")[1].click()
 						break
 					except IndexError:
-						print(f"{strftime("%H:%M:%S %d/%m/%y", localtime())} LOG: IndexError [network -> 80]")
+						print(f"{strftime("%H:%M:%S %d/%m/%y", localtime())} LOG: IndexError [network -> 110]")
 						sleep(1)
 						cnt += 1
 					except ElementClickInterceptedException:
-						print(f"{strftime("%H:%M:%S %d/%m/%y", localtime())} LOG: ElementClickInterceptedException [network -> 84]")
+						print(f"{strftime("%H:%M:%S %d/%m/%y", localtime())} LOG: ElementClickInterceptedException [network -> 114]")
 						sleep(1)
 						cnt += 1
 				# BUTTON: Address
@@ -129,9 +140,9 @@ class Net:
 					break
 			except NoSuchElementException:
 				cnt += 1
-				print(f"{strftime("%H:%M:%S %d/%m/%y", localtime())} LOG: NoSuchElementException [network -> 126]")
+				print(f"{strftime("%H:%M:%S %d/%m/%y", localtime())} LOG: NoSuchElementException [network -> 143]")
 				sleep(1)
-		if cnt == 20:
+		if cnt == 10:
 			return {"type": "DeBank Time out", "error": "DeBank page isn't loading"}
 		try:
 			wallet["age"] = self.driverDeBank.find_element(By.CSS_SELECTOR, "div.is-age").text.split("\n")[0]
