@@ -32,4 +32,4 @@ if os.path.exists("build"):
 if COUNT > 1:
 	for i in range(1, 6):
 		os.mkdir(f"dist/Collector{i}")
-		os.system(f"copy dist/MetamaskCollector.exe dist/Collector{i}/MetamaskCollector{i}.exe")
+		os.system(f"copy dist\\MetamaskCollector.exe dist\\Collector{i}\\MetamaskCollector{i}.exe")
